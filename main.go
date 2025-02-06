@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/boombuler/barcode"
 	"github.com/boombuler/barcode/qr"
@@ -106,8 +107,62 @@ func parseFlags() config {
 
 func startServer(port string) {
 	http.HandleFunc("/generate", handleGenerate)
+	http.HandleFunc("/", handleRoot)
 	log.Printf("Starting server on port %s...", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
+}
+
+func handleRoot(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
+
+	hostname, _ := os.Hostname()
+	info := fmt.Sprintf(`
+    _    ____  _   _     ___  ____      ____          _      
+   / \  / ___|| \ | |   / _ \|  _ \    / ___|___   __| | ___ 
+  / _ \ \___ \|  \| |  | | | | |_) |  | |   / _ \ / _  |/ _ \
+ / ___ \ ___) | |\  |  | |_| |  _ <   | |__| (_) | (_| |  __/
+/_/   \_\____/|_| \_|   \__\_\_| \_\   \____\___/ \__,_|\___|
+                                             Label Generator %s
+
+Server Information:
+------------------
+Hostname: %s
+Time: %s
+Version: v1.0.0
+
+API Usage:
+----------
+Generate labels: GET /generate
+Parameters:
+  - start    : Starting ASN number (default: 1)
+  - prefix   : Prefix for ASN (default: "ASN")
+  - pages    : Number of pages (default: 1)
+  - zeros    : Number of leading zeros (default: 4)
+  - borders  : Show borders, true/false (default: false)
+
+Examples:
+--------
+Basic usage:
+  /generate?start=1000&prefix=ASN&pages=1
+
+With all parameters:
+  /generate?start=1000&prefix=ASN&pages=2&zeros=5&borders=true
+
+Label Sheet Info:
+---------------
+Type: Avery L4731REV-25
+Layout: 7 x 27 (189 labels per page)
+Size: 25.4mm x 10.0mm
+
+For more information visit:
+https://github.com/tobiaswx/asn-qrcode-generator
+`, os.Args[0], hostname, time.Now().Format(time.RFC1123))
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	fmt.Fprint(w, info)
 }
 
 func handleGenerate(w http.ResponseWriter, r *http.Request) {
@@ -123,6 +178,9 @@ func handleGenerate(w http.ResponseWriter, r *http.Request) {
 	showBorders, _ := strconv.ParseBool(r.URL.Query().Get("borders"))
 
 	// Set defaults if not provided
+	if startNumber == 0 {
+		startNumber = 1
+	}
 	if pages == 0 {
 		pages = 1
 	}
