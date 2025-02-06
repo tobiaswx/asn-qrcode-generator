@@ -1,10 +1,11 @@
-# QR Code Label Generator
+# QR Code Label Generator for Paperless-ngx
 
-A Go application for generating PDF sheets of QR code labels, designed for Avery L4731REV-25 label sheets. The tool can be used both as a CLI application and as a HTTP server.
+A Go application for generating PDF sheets of QR code labels for [Paperless-ngx](https://github.com/paperless-ngx/paperless-ngx) ASN (Archive Serial Number) labels. Designed for Avery L4731REV-25 label sheets, this tool helps you create physical labels for your document management system. It can be used both as a CLI application and as a HTTP server.
 
 ## Features
 
-- Generates QR codes with customizable prefixes and numbering
+- Generates QR codes for Paperless-ngx ASNs with customizable prefixes
+- Perfect for creating physical labels for your paper documents before scanning
 - Supports Avery L4731REV-25 label sheets (189 labels per page, 7×27 grid)
 - Can be run as a CLI tool or HTTP server
 - Configurable number format with leading zeros
