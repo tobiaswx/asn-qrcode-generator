@@ -66,18 +66,42 @@ func (tf *tempFiles) cleanup() {
 }
 
 func main() {
-	// Add HTTP server flag
 	serveFlag := flag.Bool("serve", false, "Run as HTTP server")
 	port := flag.String("port", "8080", "HTTP server port")
 
-	// Parse existing flags
 	cfg := parseFlags()
 
 	if *serveFlag {
 		startServer(*port)
 	} else {
-		generatePDF(cfg)
+		if err := generatePDF(cfg); err != nil {
+			log.Fatalf("Error generating PDF: %v", err)
+		}
+		fmt.Printf("Generated PDF file: %s\n", cfg.outputFile)
 	}
+}
+
+func parseFlags() config {
+	cfg := config{}
+
+	flag.IntVar(&cfg.startNumber, "start", 1, "Starting ASN number")
+	flag.StringVar(&cfg.prefix, "prefix", "ASN", "Prefix for ASN numbers")
+	flag.IntVar(&cfg.pages, "pages", 1, "Number of pages to generate")
+	flag.StringVar(&cfg.outputFile, "output", "labels.pdf", "Output PDF file")
+	flag.BoolVar(&cfg.showBorders, "borders", false, "Show label borders (for debugging)")
+	flag.IntVar(&cfg.leadingZeros, "zeros", 4, "Number of leading zeros in the number")
+
+	flag.Parse()
+
+	// Ensure output directory exists
+	dir := filepath.Dir(cfg.outputFile)
+	if dir != "." {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			log.Fatalf("Could not create output directory: %v", err)
+		}
+	}
+
+	return cfg
 }
 
 func startServer(port string) {
@@ -136,7 +160,6 @@ func handleGenerate(w http.ResponseWriter, r *http.Request) {
 	defer os.Remove(cfg.outputFile)
 }
 
-// Modify your existing generatePDF function to return an error
 func generatePDF(cfg config) error {
 	tf := &tempFiles{
 		files: make([]string, 0, labelsPerPage),
@@ -163,29 +186,6 @@ func generatePDF(cfg config) error {
 	}
 
 	return nil
-}
-
-func parseFlags() config {
-	cfg := config{}
-
-	flag.IntVar(&cfg.startNumber, "start", 1, "Starting ASN number")
-	flag.StringVar(&cfg.prefix, "prefix", "ASN", "Prefix for ASN numbers")
-	flag.IntVar(&cfg.pages, "pages", 1, "Number of pages to generate")
-	flag.StringVar(&cfg.outputFile, "output", "labels.pdf", "Output PDF file")
-	flag.BoolVar(&cfg.showBorders, "borders", false, "Show label borders (for debugging)")
-	flag.IntVar(&cfg.leadingZeros, "zeros", 4, "Number of leading zeros in the number")
-
-	flag.Parse()
-
-	// Ensure output directory exists
-	dir := filepath.Dir(cfg.outputFile)
-	if dir != "." {
-		if err := os.MkdirAll(dir, 0755); err != nil {
-			log.Fatalf("Could not create output directory: %v", err)
-		}
-	}
-
-	return cfg
 }
 
 func generatePage(pdf *fpdf.Fpdf, startNum int, cfg config, tf *tempFiles) error {
