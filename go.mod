@@ -1,4 +1,4 @@
-module asn-labels
+module github.com/tobiaswx/asn-qrcode-generator
 
 go 1.23.6
 
