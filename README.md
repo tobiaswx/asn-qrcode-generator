@@ -69,6 +69,23 @@ The generator is configured for Avery L4731REV-25 label sheets with the followin
 - Top margin: 13.5mm
 - QR code size: 9.0mm
 
+## Docker
+
+The application is available as a Docker image from GitHub Container Registry:
+
+```bash
+docker pull ghcr.io/tobiaswx/asn-qrcode-generator:latest
+```
+
+Run the container:
+```bash
+docker run -p 8080:8080 ghcr.io/tobiaswx/asn-qrcode-generator:latest
+```
+
+Available platforms:
+- linux/amd64
+- linux/arm64
+
 ## Dependencies
 
 - github.com/boombuler/barcode
