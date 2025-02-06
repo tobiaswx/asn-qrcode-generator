@@ -6,8 +6,10 @@ import (
 	"image"
 	"image/png"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"sync"
 
 	"github.com/boombuler/barcode"
@@ -64,9 +66,78 @@ func (tf *tempFiles) cleanup() {
 }
 
 func main() {
+	// Add HTTP server flag
+	serveFlag := flag.Bool("serve", false, "Run as HTTP server")
+	port := flag.String("port", "8080", "HTTP server port")
+
+	// Parse existing flags
 	cfg := parseFlags()
 
-	// Create tempFiles to track our temporary QR code images
+	if *serveFlag {
+		startServer(*port)
+	} else {
+		generatePDF(cfg)
+	}
+}
+
+func startServer(port string) {
+	http.HandleFunc("/generate", handleGenerate)
+	log.Printf("Starting server on port %s...", port)
+	log.Fatal(http.ListenAndServe(":"+port, nil))
+}
+
+func handleGenerate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Parse query parameters with defaults
+	startNumber, _ := strconv.Atoi(r.URL.Query().Get("start"))
+	pages, _ := strconv.Atoi(r.URL.Query().Get("pages"))
+	leadingZeros, _ := strconv.Atoi(r.URL.Query().Get("zeros"))
+	showBorders, _ := strconv.ParseBool(r.URL.Query().Get("borders"))
+
+	// Set defaults if not provided
+	if pages == 0 {
+		pages = 1
+	}
+	if leadingZeros == 0 {
+		leadingZeros = 4
+	}
+
+	prefix := r.URL.Query().Get("prefix")
+	if prefix == "" {
+		prefix = "ASN"
+	}
+
+	// Convert to config
+	cfg := config{
+		startNumber:  startNumber,
+		prefix:       prefix,
+		pages:        pages,
+		outputFile:   fmt.Sprintf("asn-%d.pdf", startNumber),
+		showBorders:  showBorders,
+		leadingZeros: leadingZeros,
+	}
+
+	// Generate PDF
+	if err := generatePDF(cfg); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Send file
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", cfg.outputFile))
+	http.ServeFile(w, r, cfg.outputFile)
+
+	// Clean up the file after sending
+	defer os.Remove(cfg.outputFile)
+}
+
+// Modify your existing generatePDF function to return an error
+func generatePDF(cfg config) error {
 	tf := &tempFiles{
 		files: make([]string, 0, labelsPerPage),
 	}
@@ -83,17 +154,15 @@ func main() {
 
 		startNum := cfg.startNumber + (page * labelsPerPage)
 		if err := generatePage(pdf, startNum, cfg, tf); err != nil {
-			log.Fatalf("Error generating page %d: %v", page+1, err)
+			return fmt.Errorf("error generating page %d: %v", page+1, err)
 		}
 	}
 
-	// Save the PDF
 	if err := pdf.OutputFileAndClose(cfg.outputFile); err != nil {
-		log.Fatalf("Error saving PDF: %v", err)
+		return fmt.Errorf("error saving PDF: %v", err)
 	}
 
-	fmt.Printf("Generated %d pages of labels starting from %s%d\n",
-		cfg.pages, cfg.prefix, cfg.startNumber)
+	return nil
 }
 
 func parseFlags() config {
