@@ -1,12 +1,12 @@
 # QR Code Label Generator for Paperless-ngx
 
-A Go application for generating PDF sheets of QR code labels for [Paperless-ngx](https://github.com/paperless-ngx/paperless-ngx) ASN (Archive Serial Number) labels. Designed for Avery L4731REV-25 label sheets, this tool helps you create physical labels for your document management system. It can be used both as a CLI application and as a HTTP server.
+A Go application for generating PDF sheets of QR code labels for [Paperless-ngx](https://github.com/paperless-ngx/paperless-ngx) ASN (Archive Serial Number) labels. Designed for Avery L4731REV-25 and compatible label sheets (see Label Sheet Specifications for a complete list), this tool helps you create physical labels for your document management system. It can be used both as a CLI application and as a HTTP server.
 
 ## Features
 
 - Generates QR codes for Paperless-ngx ASNs with customizable prefixes
 - Perfect for creating physical labels for your paper documents before scanning
-- Supports Avery L4731REV-25 label sheets (189 labels per page, 7×27 grid)
+- Supports multiple label sheet formats including Avery L4731REV-25 and HERMA 10001 (189 labels per page, 7×27 grid)
 - Can be run as a CLI tool or HTTP server
 - Configurable number format with leading zeros
 - Debug mode with visible label borders
@@ -69,6 +69,10 @@ The generator is configured for Avery L4731REV-25 label sheets with the followin
 - Left margin: 8.45mm
 - Top margin: 13.5mm
 - QR code size: 9.0mm
+
+Compatible label sheets:
+- Avery L4731REV-25 (primary supported format)
+- HERMA 10001 (confirmed compatible due to identical dimensions)
 
 ## Docker
 
