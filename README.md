@@ -13,6 +13,23 @@ A Go application for generating PDF sheets of QR code labels for [Paperless-ngx]
 - Temporary file cleanup
 - PDF output with precise label positioning
 
+## Public Instance
+
+A public instance is available at https://asn-qrcode-generator.tobiaswx.com for quick label generation without the need to set up your own server. This instance is hosted on a private server and tunneled via Cloudflare, so it should be available most of the time (barring power or internet outages).
+
+Example usage:
+```
+https://asn-qrcode-generator.tobiaswx.com/generate?pages=25
+```
+This will generate 25 pages of labels, starting with ASN0001 up to ASN4725 (189 labels per page). The example uses the default values (prefix="ASN", start=1, zeros=4) for simplicity - all parameters can be customized as needed. PDF generation for that example typically takes 5-10 seconds.
+
+For immediate access to the most commonly used configuration (25 pages with default settings), you can download a pre-generated PDF directly:
+```
+https://hel1.your-objectstorage.com/tobiaswx-github-public/asn-qrcode-generator/asn0001-asn4725_25pages_default.pdf
+```
+
+Note: While the public instance is provided as a convenience, for production use or if you need guaranteed availability, consider running your own instance using the instructions below.
+
 ## Installation
 
 ```bash
